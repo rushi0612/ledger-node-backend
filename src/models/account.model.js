@@ -1,17 +1,19 @@
-const mongoose = required("mongoose")
+const mongoose = require("mongoose")
 
-const accountScema = new mongoose.Schema({
+const accountSchema = new mongoose.Schema({
     user:{
-        type: mongoose.Schema.Type.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref:"user",
         required : [true, "Account must belong to a user" ],
         index: true
     },
     status :{
+        type: String,
         enum:{
             values: ["ACTIVE", "FROZEN", "CLOSED"],
-            message: "Status must be either ACTIVE, FROZEN or CLOSED"
-        }
+            message: "Status must be either ACTIVE, FROZEN or CLOSED",
+        },
+        default: "ACTIVE"
     },
     currency: {
         type: String,
