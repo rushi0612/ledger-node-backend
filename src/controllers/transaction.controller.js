@@ -20,10 +20,13 @@ const emailService = require("../services/email.service")
  */
 
 async function createTransaction(req, res){
+
+
+    //1. Validate transaction request
     const { fromAccount, toAccount, amount, idempotencyKey} = req.body
     
     if(!fromAccount || !toAccount || !amount || !idempotencyKey){
-        res.status(400).json({
+        return res.status(400).json({
             message: "FromAccount, ToAccount, Amount and IdempotencyKey is required"
         })
     }
@@ -36,9 +39,40 @@ async function createTransaction(req, res){
         _id:toAccount,
     })
 
-    if(!fromAccount || !toAccount){
+    if(!fromUserAccount || !toUserAccount){
         return res.status(400).json({
             message:"Invalid fromAccount or toAccount"
         })
     }
-}
+
+    //2. Check idempotency key
+     
+    const isTransactionAlreadyExists = await transactionModel.findOne({
+        idempotencyKey: idempotencyKey
+    })
+
+    if(isTransactionAlreadyExists){
+        if(isTransactionAlreadyExists.status === "COMPLETED"){
+            return res.status(200).json({
+                message: "Transaction is already in processed",
+                transaction: isTransactionAlreadyExists
+            })
+        }
+        if(isTransactionAlreadyExists.status === "PENDING"){
+            return res.status(200).json({
+                message: "Transaction is still in Processing"
+            })
+        }
+        if(isTransactionAlreadyExists.status === "FAILED"){
+            return res.status(500).json({
+                message: "Transaction is Failed, please retry"
+            })
+        }
+        if(isTransactionAlreadyExists.status === "REVERSED"){
+            return res.status(500).json({
+                message: "Transaction was Reversed, pleas retry"
+            })
+        }
+
+    }
+}    
