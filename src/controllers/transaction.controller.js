@@ -2,6 +2,7 @@ const transactionModel = require("../models/transaction.model");
 const ledgerModel = require("../models/ledger.model");
 const accountModel = require("../models/account.model")
 const emailService = require("../services/email.service")
+const mongoose = require("mongoose")
 
 /**
  * Create a new transaction
@@ -90,5 +91,43 @@ async function createTransaction(req, res){
             message: `Insufficient balance. Current balance is ${balance}. Requested amount is ${amount}`
         })
     }
+
+
+    //5. Create pending transaction...  6 7 8 9 
+    const session = await mongoose.startSession()
+    session.startTransaction()
+
+    const transaction = await transactionModel.create({
+        fromAccount,
+        toAccount,
+        amount,
+        idempotencyKey,
+        status: "PENDING"
+    }, { session })
+
+    const debitLedgerEntry = await ledgerModel.create({
+        account: fromAccount,
+        amount: amount,
+        transaction: transaction._id,
+        type:"DEBIT"
+    }, { session })
+
+    const creditLedgerEntry = await ledgerModel.create({
+        account: toAccount,
+        amount: amount,
+        transaction: transaction._id,
+        type: "CREDIT"
+    }, { session })
+
+
+    transaction.status = "COMPLETED"
+    await transaction.save({ session })
+
+    await session.commitTransaction()
+    session.endSession()
+    return res.status(201).json({
+        message: "Initial funds transaction completed successfully",
+        transaction: transaction
+    })
 
 }   
