@@ -46,7 +46,6 @@ async function createTransaction(req, res){
     }
 
     //2. Check idempotency key
-     
     const isTransactionAlreadyExists = await transactionModel.findOne({
         idempotencyKey: idempotencyKey
     })
@@ -75,4 +74,21 @@ async function createTransaction(req, res){
         }
 
     }
-}    
+
+    //3. Verify account status
+    if(fromUserAccount !== "ACTIVE" || toUserAccount !== "ACTIVE" ){
+        return res.status(400).json({
+            message: "Both fromUserAccount and toUserAccount must be ACTIVE to process transaction"
+        })
+    }
+
+    //4. Check available balance
+    const balance = await fromUserAccount.getBalance()
+
+    if(balance < amount ){
+        return res.status(400).json({
+            message: `Insufficient balance. Current balance is ${balance}. Requested amount is ${amount}`
+        })
+    }
+
+}   
