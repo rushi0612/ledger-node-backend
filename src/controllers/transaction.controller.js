@@ -69,14 +69,14 @@ async function createTransaction(req, res){
         }
         if(isTransactionAlreadyExists.status === "REVERSED"){
             return res.status(500).json({
-                message: "Transaction was Reversed, pleas retry"
+                message: "Transaction was Reversed, please retry"
             })
         }
 
     }
 
     //3. Verify account status
-    if(fromUserAccount !== "ACTIVE" || toUserAccount !== "ACTIVE" ){
+    if(fromUserAccount.status !== "ACTIVE" || toUserAccount.status !== "ACTIVE" ){
         return res.status(400).json({
             message: "Both fromUserAccount and toUserAccount must be ACTIVE to process transaction"
         })
