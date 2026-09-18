@@ -130,4 +130,12 @@ async function createTransaction(req, res){
         transaction: transaction
     })
 
+    await emailService.sendTransactionEmail(req.user.email, req.user.name, amount, toAccount)
+    return res.satus(200).json({
+        message: "Transaction Completed sussesfully",
+        transaction: transaction
+    })
+
 }   
+
+module.exports = { createTransaction}
