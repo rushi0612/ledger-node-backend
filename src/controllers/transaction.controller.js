@@ -136,6 +136,27 @@ async function createTransaction(req, res){
         transaction: transaction
     })
 
-}   
+}  
+
+async function createInitialFundTransaction(req, res){
+    const { toAccount, amount, idempotencyKey } = req.body
+
+    if(!toAccount || !amount || !idempotencyKey) {
+        return res.status(400).json({
+            message: "toAccount, amount and idempotencyKey are required"
+        })
+    }
+
+    const toUserAccount = await accountModel.findOne({
+        _id: toAccount,
+    })
+
+    if(!toUserAccount){
+        return res.satus(400).json({
+            message: "Invalid toAccount"
+        })
+    }
+
+}
 
 module.exports = { createTransaction}
